@@ -1,0 +1,9 @@
+{
+  "HR": ["resume", "interview", "offer letter", "employee", "onboarding", "hiring", "salary", "stipend", "internship", "intern", "CTC","cover letter"],
+  "Finance": ["invoice", "budget", "tax return", "receipt", "expense report", "financial statement", "audit", "fiscal year"],
+  "Academics": ["thesis", "research paper", "syllabus", "assignment", "exam", "grade sheet", "lecture notes", "course outline","homework", "marksheet", "midterm"],
+  "Projects": ["roadmap", "specification", "timeline", "deliverable", "project plan", "milestone", "Gantt chart"],
+  "Marketing": ["campaign", "brand guidelines", "social media", "promo", "ad copy", "SEO", "content calendar"],
+  "Personal": ["vacation", "family photo", "recipe", "personal journal", "diary", "travel itinerary", "grocery list","credentials"]
+}
+

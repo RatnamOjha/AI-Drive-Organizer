@@ -1,0 +1,10 @@
+# Secrets
+credentials/
+token.pickle
+
+# Virtual env
+venv/
+*.env
+
+# OS files
+.DS_Store
