@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drive Organizer AI — Intelligent Google Drive Organization</title>
+<meta name="description" content="Automatically categorize and organize your Google Drive files using local AI. No cloud APIs, no privacy trade-offs.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --cream:   #FAF8F3;
+    --paper:   #F4F1EA;
+    --sand:    #E8E2D5;
+    --warm:    #D4C9B0;
+    --ink:     #1C1A16;
+    --ink-2:   #3D3A32;
+    --ink-3:   #6B6659;
+    --accent:  #2D6A4F;
+    --accent-l:#4A8C6A;
+    --accent-xl:#E8F4EE;
+    --amber:   #C47D2B;
+    --amber-l: #F5E6C8;
+    --red:     #C0392B;
+    --blue:    #2C5F8A;
+    --blue-l:  #E3EDF5;
+    --r: 10px;
+    --r-lg: 18px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── NAV ─────────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 48px;
+    background: rgba(250,248,243,0.88);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--sand);
+  }
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem; color: var(--ink);
+    display: flex; align-items: center; gap: 10px;
+    text-decoration: none;
+  }
+  .nav-logo .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+  .nav-links { display: flex; align-items: center; gap: 32px; }
+  .nav-links a {
+    font-size: 0.88rem; font-weight: 400; color: var(--ink-3);
+    text-decoration: none; letter-spacing: 0.01em;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--ink); }
+  .nav-cta {
+    background: var(--ink) !important; color: var(--cream) !important;
+    padding: 8px 20px; border-radius: 99px;
+    font-size: 0.85rem !important; font-weight: 500 !important;
+    transition: background 0.2s !important;
+  }
+  .nav-cta:hover { background: var(--ink-2) !important; }
+
+  /* ── HERO ─────────────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+    gap: 0; padding: 120px 48px 80px;
+    max-width: 1280px; margin: 0 auto;
+  }
+  .hero-left { padding-right: 64px; }
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-xl); color: var(--accent);
+    font-size: 0.78rem; font-weight: 500; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 5px 14px; border-radius: 99px;
+    margin-bottom: 28px;
+  }
+  .hero-tag::before {
+    content: ''; width: 6px; height: 6px; background: var(--accent);
+    border-radius: 50%; animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
+    line-height: 1.08; letter-spacing: -0.02em;
+    color: var(--ink); margin-bottom: 24px;
+  }
+  h1 em { font-style: italic; color: var(--accent); }
+  .hero-sub {
+    font-size: 1.05rem; color: var(--ink-3); font-weight: 300;
+    max-width: 440px; margin-bottom: 40px; line-height: 1.7;
+  }
+  .hero-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--ink); color: var(--cream);
+    padding: 14px 28px; border-radius: 99px;
+    font-size: 0.92rem; font-weight: 500; text-decoration: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 12px rgba(28,26,22,0.15);
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(28,26,22,0.22); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--ink-2); font-size: 0.92rem; font-weight: 400;
+    text-decoration: none; padding: 14px 4px;
+    border-bottom: 1px solid var(--warm);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-secondary:hover { color: var(--ink); border-color: var(--ink-2); }
+
+  /* ── HERO RIGHT: live demo card ─────────────────────────────── */
+  .hero-right { position: relative; }
+  .demo-card {
+    background: #fff;
+    border: 1px solid var(--sand);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(28,26,22,0.08), 0 1px 3px rgba(28,26,22,0.06);
+  }
+  .demo-topbar {
+    background: var(--paper);
+    border-bottom: 1px solid var(--sand);
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .demo-dots { display: flex; gap: 6px; }
+  .demo-dots span {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .demo-dots span:nth-child(1) { background: #FF5F57; }
+  .demo-dots span:nth-child(2) { background: #FEBC2E; }
+  .demo-dots span:nth-child(3) { background: #28C840; }
+  .demo-title {
+    font-size: 0.75rem; color: var(--ink-3); font-weight: 400;
+    flex: 1; text-align: center; letter-spacing: 0.02em;
+  }
+  .demo-body { padding: 20px; }
+  .demo-progress-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .demo-progress-label { font-size: 0.78rem; color: var(--ink-3); }
+  .demo-progress-pct { font-size: 0.78rem; font-weight: 500; color: var(--accent); }
+  .demo-bar-track {
+    height: 4px; background: var(--sand); border-radius: 99px;
+    margin-bottom: 18px; overflow: hidden;
+  }
+  .demo-bar-fill {
+    height: 100%; background: var(--accent); border-radius: 99px;
+    width: 0%; transition: width 1s ease;
+  }
+  .demo-files { display: flex; flex-direction: column; gap: 8px; }
+  .demo-file {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--cream); border-radius: var(--r);
+    border: 1px solid var(--sand);
+    opacity: 0; transform: translateX(-8px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .demo-file.visible { opacity: 1; transform: translateX(0); }
+  .demo-file-icon {
+    width: 32px; height: 32px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .demo-file-name { font-size: 0.82rem; color: var(--ink-2); flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .demo-file-badge {
+    font-size: 0.7rem; font-weight: 500;
+    padding: 3px 10px; border-radius: 99px; white-space: nowrap;
+  }
+  .badge-hr    { background: #FEF3C7; color: #92400E; }
+  .badge-fin   { background: #D1FAE5; color: #065F46; }
+  .badge-tech  { background: #DBEAFE; color: #1E40AF; }
+  .badge-legal { background: #F3E8FF; color: #6B21A8; }
+  .badge-proj  { background: #FFE4E6; color: #9F1239; }
+  .badge-mkt   { background: #FFF7ED; color: #9A3412; }
+  .demo-conf {
+    font-size: 0.7rem; color: var(--ink-3); min-width: 30px; text-align: right;
+  }
+
+  /* ── STATS BAR ────────────────────────────────────────────────── */
+  .stats-bar {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 28px 48px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .stat-item {
+    text-align: center;
+    padding: 0 24px;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem; color: #fff; display: block; margin-bottom: 4px;
+  }
+  .stat-label { font-size: 0.8rem; color: rgba(255,255,255,0.5); letter-spacing: 0.04em; }
+
+  /* ── HOW IT WORKS ─────────────────────────────────────────────── */
+  section { max-width: 1280px; margin: 0 auto; padding: 96px 48px; }
+  .section-tag {
+    font-size: 0.75rem; font-weight: 500; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--accent);
+    margin-bottom: 16px; display: block;
+  }
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2rem, 3.5vw, 3rem);
+    line-height: 1.1; letter-spacing: -0.02em;
+    margin-bottom: 16px;
+  }
+  .section-sub {
+    font-size: 1.05rem; color: var(--ink-3); font-weight: 300;
+    max-width: 560px; margin-bottom: 64px; line-height: 1.7;
+  }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  .step-card {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: var(--r-lg); padding: 32px 28px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .step-card:hover { transform: translateY(-3px); box-shadow: 0 12px 36px rgba(28,26,22,0.08); }
+  .step-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3rem; color: var(--sand); margin-bottom: 20px;
+    line-height: 1;
+  }
+  .step-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: 20px;
+  }
+  .step-card h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem; margin-bottom: 10px; color: var(--ink);
+  }
+  .step-card p { font-size: 0.92rem; color: var(--ink-3); line-height: 1.65; }
+
+  /* ── CATEGORIES ───────────────────────────────────────────────── */
+  .categories-section { background: var(--paper); padding: 96px 0; }
+  .categories-inner { max-width: 1280px; margin: 0 auto; padding: 0 48px; }
+  .category-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px; margin-top: 48px;
+  }
+  .cat-card {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: var(--r-lg); padding: 24px 20px;
+    cursor: default;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .cat-card:hover { border-color: var(--warm); transform: translateY(-2px); }
+  .cat-emoji { font-size: 28px; margin-bottom: 12px; display: block; }
+  .cat-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem; margin-bottom: 6px; color: var(--ink);
+  }
+  .cat-desc { font-size: 0.82rem; color: var(--ink-3); line-height: 1.5; }
+  .cat-count {
+    font-size: 0.75rem; color: var(--ink-3); margin-top: 12px;
+    padding-top: 12px; border-top: 1px solid var(--sand);
+  }
+
+  /* ── CLI DEMO ─────────────────────────────────────────────────── */
+  .cli-section { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+  .terminal {
+    background: #1C1A16; border-radius: var(--r-lg); overflow: hidden;
+    box-shadow: 0 12px 48px rgba(28,26,22,0.18);
+  }
+  .terminal-bar {
+    background: #2A2720; padding: 12px 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .terminal-bar .tdot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .terminal-bar .tdot:nth-child(1) { background: #FF5F57; }
+  .terminal-bar .tdot:nth-child(2) { background: #FEBC2E; }
+  .terminal-bar .tdot:nth-child(3) { background: #28C840; }
+  .terminal-title { font-size: 0.72rem; color: rgba(255,255,255,0.3); margin-left: 8px; }
+  .terminal-body { padding: 24px; font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.9; }
+  .t-prompt { color: #4CAF82; }
+  .t-cmd { color: #E8E2D5; }
+  .t-comment { color: rgba(255,255,255,0.3); }
+  .t-info { color: #7FBFFF; }
+  .t-success { color: #4CAF82; }
+  .t-warn { color: #F0C04A; }
+  .t-cursor {
+    display: inline-block; width: 8px; height: 14px;
+    background: #4CAF82; vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  .cli-features { display: flex; flex-direction: column; gap: 24px; }
+  .cli-feature { display: flex; gap: 18px; align-items: flex-start; }
+  .cli-feature-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--accent-xl); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; margin-top: 2px;
+  }
+  .cli-feature h4 {
+    font-size: 0.98rem; font-weight: 500; margin-bottom: 4px; color: var(--ink);
+  }
+  .cli-feature p { font-size: 0.88rem; color: var(--ink-3); line-height: 1.55; }
+
+  /* ── PRIVACY ──────────────────────────────────────────────────── */
+  .privacy-section { background: var(--accent); color: #fff; padding: 80px 0; }
+  .privacy-inner {
+    max-width: 1280px; margin: 0 auto; padding: 0 48px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center;
+  }
+  .privacy-inner h2 { color: #fff; }
+  .privacy-inner .section-sub { color: rgba(255,255,255,0.7); }
+  .privacy-points { display: flex; flex-direction: column; gap: 20px; }
+  .privacy-point {
+    display: flex; gap: 16px; align-items: flex-start;
+    background: rgba(255,255,255,0.1); border-radius: var(--r);
+    padding: 18px 20px; border: 1px solid rgba(255,255,255,0.15);
+  }
+  .privacy-point-icon { font-size: 22px; flex-shrink: 0; margin-top: 1px; }
+  .privacy-point h4 { font-size: 0.95rem; font-weight: 500; margin-bottom: 4px; color: #fff; }
+  .privacy-point p { font-size: 0.85rem; color: rgba(255,255,255,0.65); line-height: 1.5; }
+
+  /* ── SETUP ────────────────────────────────────────────────────── */
+  .setup-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-top: 48px; }
+  .setup-step {
+    background: #fff; border: 1px solid var(--sand);
+    border-radius: var(--r-lg); padding: 28px 22px;
+    position: relative;
+  }
+  .setup-step::after {
+    content: '→';
+    position: absolute; right: -16px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--warm); font-size: 1.2rem; z-index: 1;
+  }
+  .setup-step:last-child::after { display: none; }
+  .setup-step-num {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--ink); color: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.85rem; font-weight: 500;
+    margin-bottom: 16px;
+  }
+  .setup-step h4 { font-size: 0.95rem; font-weight: 500; margin-bottom: 8px; }
+  .setup-step p { font-size: 0.83rem; color: var(--ink-3); line-height: 1.5; }
+  .code-inline {
+    background: var(--paper); border: 1px solid var(--sand);
+    border-radius: 4px; padding: 1px 6px;
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.8em;
+    color: var(--accent);
+  }
+
+  /* ── CI PIPELINE VIZ ──────────────────────────────────────────── */
+  .pipeline-viz {
+    display: flex; align-items: center; gap: 0;
+    background: var(--paper); border: 1px solid var(--sand);
+    border-radius: var(--r-lg); padding: 28px 24px;
+    overflow-x: auto; margin-top: 48px;
+  }
+  .pipeline-stage {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 10px; min-width: 110px; cursor: default;
+  }
+  .pipeline-stage-icon {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; border: 2px solid transparent;
+    transition: transform 0.2s;
+  }
+  .pipeline-stage:hover .pipeline-stage-icon { transform: scale(1.1); }
+  .pipeline-stage-icon.lint   { background: var(--amber-l); border-color: var(--amber); }
+  .pipeline-stage-icon.test   { background: var(--blue-l); border-color: var(--blue); }
+  .pipeline-stage-icon.sec    { background: #FECACA; border-color: var(--red); }
+  .pipeline-stage-icon.docker { background: #DBEAFE; border-color: #2563EB; }
+  .pipeline-stage-icon.deploy { background: var(--accent-xl); border-color: var(--accent); }
+  .pipeline-stage-name { font-size: 0.78rem; font-weight: 500; color: var(--ink-2); }
+  .pipeline-stage-sub  { font-size: 0.7rem; color: var(--ink-3); text-align: center; }
+  .pipeline-arrow {
+    flex: 1; height: 2px; background: var(--sand);
+    position: relative; margin: 0 4px;
+    min-width: 24px;
+  }
+  .pipeline-arrow::after {
+    content: ''; position: absolute; right: -6px; top: -4px;
+    border-left: 8px solid var(--sand); border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+  }
+
+  /* ── CTA ──────────────────────────────────────────────────────── */
+  .cta-section {
+    text-align: center; background: var(--paper);
+    border-top: 1px solid var(--sand); padding: 96px 48px;
+  }
+  .cta-section h2 { margin-bottom: 16px; }
+  .cta-section .section-sub { margin: 0 auto 40px; }
+  .cta-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+
+  /* ── FOOTER ───────────────────────────────────────────────────── */
+  footer {
+    background: var(--ink); color: rgba(255,255,255,0.5);
+    padding: 48px; display: flex; align-items: center; justify-content: space-between;
+  }
+  footer .footer-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem; color: var(--cream);
+  }
+  footer .footer-links { display: flex; gap: 24px; }
+  footer a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+  footer a:hover { color: rgba(255,255,255,0.8); }
+  footer .footer-copy { font-size: 0.8rem; }
+
+  /* ── SCROLL ANIMATIONS ────────────────────────────────────────── */
+  .fade-up {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+  /* ── RESPONSIVE ───────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .hero { grid-template-columns: 1fr; padding: 100px 24px 48px; }
+    .hero-left { padding-right: 0; margin-bottom: 48px; }
+    section { padding: 64px 24px; }
+    .steps { grid-template-columns: 1fr; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    .stat-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px; }
+    .cli-section { grid-template-columns: 1fr; }
+    .privacy-inner { grid-template-columns: 1fr; padding: 0 24px; }
+    .setup-grid { grid-template-columns: repeat(2, 1fr); }
+    .setup-step::after { display: none; }
+    .category-grid { grid-template-columns: repeat(2, 1fr); }
+    footer { flex-direction: column; gap: 24px; text-align: center; padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="dot"></span>
+    Drive Organizer AI
+  </a>
+  <div class="nav-links">
+    <a href="#how-it-works">How it works</a>
+    <a href="#categories">Categories</a>
+    <a href="#setup">Setup</a>
+    <a href="#pipeline">CI/CD</a>
+    <a href="https://github.com/your-username/drive-organizer-ai" class="nav-cta">View on GitHub</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" style="padding-top: 120px;">
+  <div class="hero-left">
+    <div class="hero-tag">Open Source · Local AI · Zero Data Transfer</div>
+    <h1>Your Drive,<br><em>intelligently</em><br>organized.</h1>
+    <p class="hero-sub">
+      Automatically classify and sort your Google Drive files into smart categories — using on-device AI. No cloud APIs, no subscriptions, no privacy trade-offs.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/your-username/drive-organizer-ai" class="btn-primary">
+        ↓ Get started free
+      </a>
+      <a href="#how-it-works" class="btn-secondary">
+        See how it works →
+      </a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="demo-card">
+      <div class="demo-topbar">
+        <div class="demo-dots">
+          <span></span><span></span><span></span>
+        </div>
+        <div class="demo-title">drive-organizer — running</div>
+      </div>
+      <div class="demo-body">
+        <div class="demo-progress-row">
+          <span class="demo-progress-label">Organizing 142 files…</span>
+          <span class="demo-progress-pct" id="pct">0%</span>
+        </div>
+        <div class="demo-bar-track">
+          <div class="demo-bar-fill" id="bar"></div>
+        </div>
+        <div class="demo-files" id="demo-files">
+          <div class="demo-file" data-delay="300" data-icon="📄" data-bg="#FFF7ED" data-name="Employee_Handbook_2024.pdf" data-badge="badge-hr" data-label="HR" data-conf="94%"></div>
+          <div class="demo-file" data-delay="800" data-icon="📊" data-bg="#D1FAE5" data-name="Q3_Budget_Report.xlsx" data-badge="badge-fin" data-label="Finance" data-conf="97%"></div>
+          <div class="demo-file" data-delay="1300" data-icon="🗂️" data-bg="#DBEAFE" data-name="api_documentation_v2.md" data-badge="badge-tech" data-label="Technical" data-conf="91%"></div>
+          <div class="demo-file" data-delay="1800" data-icon="📋" data-bg="#F3E8FF" data-name="NDA_ClientABC.docx" data-badge="badge-legal" data-label="Legal" data-conf="99%"></div>
+          <div class="demo-file" data-delay="2300" data-icon="🗺️" data-bg="#FFE4E6" data-name="Product_Roadmap_H2.pdf" data-badge="badge-proj" data-label="Projects" data-conf="88%"></div>
+          <div class="demo-file" data-delay="2800" data-icon="📢" data-bg="#FFF7ED" data-name="Campaign_Brief_Oct.pptx" data-badge="badge-mkt" data-label="Marketing" data-conf="85%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar">
+  <div class="stat-item">
+    <span class="stat-num" data-count="9">0</span>
+    <span class="stat-label">Smart Categories</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" data-count="100">0</span>
+    <span class="stat-label">Weighted Keywords</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num" data-count="5">0</span>
+    <span class="stat-label">CI/CD Pipeline Stages</span>
+  </div>
+  <div class="stat-item">
+    <span class="stat-num">0ms</span>
+    <span class="stat-label">External API Calls</span>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section id="how-it-works">
+  <span class="section-tag">How it works</span>
+  <h2>From chaos to<br>clarity in minutes</h2>
+  <p class="section-sub">Three steps. Fully local. Works with every major file format your Drive holds.</p>
+
+  <div class="steps">
+    <div class="step-card fade-up">
+      <div class="step-icon" style="background:#E8F4EE;">🔍</div>
+      <div class="step-num">01</div>
+      <h3>Scan & Extract</h3>
+      <p>Connects to your Drive via OAuth2. Extracts text from PDFs, DOCX, XLSX, Google Docs, Sheets, and even scanned images via Tesseract OCR — all in parallel, in batches.</p>
+    </div>
+    <div class="step-card fade-up" style="transition-delay: 0.1s;">
+      <div class="step-icon" style="background:#E3EDF5;">🧠</div>
+      <div class="step-num">02</div>
+      <h3>Classify Locally</h3>
+      <p>A TF-IDF weighted keyword classifier scores each file against 9 categories using 100+ curated terms. No data leaves your machine — confidence scores let you tune sensitivity.</p>
+    </div>
+    <div class="step-card fade-up" style="transition-delay: 0.2s;">
+      <div class="step-icon" style="background:#FEF3C7;">📁</div>
+      <div class="step-num">03</div>
+      <h3>Organize & Report</h3>
+      <p>Files above your confidence threshold are moved to clean category folders. A generated HTML + JSON report gives you a full audit trail of every decision made.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CATEGORIES -->
+<div class="categories-section" id="categories">
+  <div class="categories-inner">
+    <span class="section-tag">Smart categories</span>
+    <h2>9 categories,<br>fully customizable</h2>
+    <p class="section-sub">Powered by a JSON keyword file you can edit. Add new categories, adjust weights, or disable ones you don't need.</p>
+
+    <div class="category-grid">
+      <div class="cat-card fade-up">
+        <span class="cat-emoji">👥</span>
+        <div class="cat-name">HR</div>
+        <div class="cat-desc">Resumes, offer letters, payroll, performance reviews, onboarding docs.</div>
+        <div class="cat-count">16 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.05s">
+        <span class="cat-emoji">💰</span>
+        <div class="cat-name">Finance</div>
+        <div class="cat-desc">Invoices, budgets, tax documents, balance sheets, expense reports.</div>
+        <div class="cat-count">16 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.1s">
+        <span class="cat-emoji">🎓</span>
+        <div class="cat-name">Academics</div>
+        <div class="cat-desc">Theses, assignments, lecture notes, research papers, syllabi.</div>
+        <div class="cat-count">14 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.15s">
+        <span class="cat-emoji">🗺️</span>
+        <div class="cat-name">Projects</div>
+        <div class="cat-desc">Roadmaps, sprints, design docs, Gantt charts, requirements specs.</div>
+        <div class="cat-count">14 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.2s">
+        <span class="cat-emoji">📢</span>
+        <div class="cat-name">Marketing</div>
+        <div class="cat-desc">Campaign briefs, brand guidelines, content calendars, press releases.</div>
+        <div class="cat-count">13 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.25s">
+        <span class="cat-emoji">🏠</span>
+        <div class="cat-name">Personal</div>
+        <div class="cat-desc">Journals, travel notes, recipes, family documents, wish lists.</div>
+        <div class="cat-count">10 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.3s">
+        <span class="cat-emoji">⚖️</span>
+        <div class="cat-name">Legal</div>
+        <div class="cat-desc">Contracts, NDAs, compliance docs, GDPR, IP agreements, T&Cs.</div>
+        <div class="cat-count">13 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.35s">
+        <span class="cat-emoji">💻</span>
+        <div class="cat-name">Technical</div>
+        <div class="cat-desc">API docs, READMEs, DB schemas, changelogs, CI/CD configs.</div>
+        <div class="cat-count">13 weighted keywords</div>
+      </div>
+      <div class="cat-card fade-up" style="transition-delay:0.4s">
+        <span class="cat-emoji">📦</span>
+        <div class="cat-name">Miscellaneous</div>
+        <div class="cat-desc">Catch-all for files that don't meet the confidence threshold.</div>
+        <div class="cat-count">Fallback category</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CLI SECTION -->
+<section id="cli" style="padding-top: 96px; padding-bottom: 96px;">
+  <div class="cli-section">
+    <div class="terminal fade-up">
+      <div class="terminal-bar">
+        <span class="tdot"></span><span class="tdot"></span><span class="tdot"></span>
+        <span class="terminal-title">bash — drive-organizer-ai</span>
+      </div>
+      <div class="terminal-body">
+        <div><span class="t-prompt">$ </span><span class="t-cmd">python -m src.main \</span></div>
+        <div style="padding-left:18px"><span class="t-cmd">--dry-run \</span></div>
+        <div style="padding-left:18px"><span class="t-cmd">--confidence-threshold 0.75 \</span></div>
+        <div style="padding-left:18px"><span class="t-cmd">--categories HR Finance Legal \</span></div>
+        <div style="padding-left:18px"><span class="t-cmd">--batch-size 30 \</span></div>
+        <div style="padding-left:18px;margin-bottom:12px"><span class="t-cmd">--report</span></div>
+
+        <div><span class="t-info">🧠 Drive Organizer AI starting up...</span></div>
+        <div><span class="t-info">🔑 Loaded token from credentials/token.pickle</span></div>
+        <div><span class="t-info">📂 Scanning folder: root</span></div>
+        <div><span class="t-info">📄 Found 142 files to process</span></div>
+        <div><span class="t-info">🔍 DRY RUN mode — no files will be moved</span></div>
+        <div><span class="t-warn">⚙️  Processing batch 1/5 (30 files)</span></div>
+        <div><span class="t-success">✅ [DRY RUN] 'Q3_Budget.xlsx' → Finance/</span></div>
+        <div><span class="t-success">✅ [DRY RUN] 'NDA_ClientX.pdf' → Legal/</span></div>
+        <div><span class="t-warn">⚠️  Low confidence (0.52) 'misc_doc.txt' — skipping</span></div>
+        <div style="margin-top:8px"><span class="t-success">✅ Done! Moved: 118 | Skipped: 24 | Total: 142</span></div>
+        <div><span class="t-info">📊 Report saved to: reports/report_20241016.html</span></div>
+        <div style="margin-top:4px"><span class="t-prompt">$ </span><span class="t-cursor"></span></div>
+      </div>
+    </div>
+
+    <div class="cli-features fade-up" style="transition-delay:0.15s">
+      <h2 style="font-size:2rem; margin-bottom:8px;">A CLI built<br>for power users</h2>
+      <p style="color: var(--ink-3); font-size:0.95rem; margin-bottom:32px; line-height:1.6;">Every behavior is tunable. Run a safe dry-run first, then let it rip.</p>
+
+      <div class="cli-feature">
+        <div class="cli-feature-icon">🔍</div>
+        <div>
+          <h4>Dry-run mode</h4>
+          <p>Simulate the entire run without touching a single file. See exactly what would move and where before committing.</p>
+        </div>
+      </div>
+      <div class="cli-feature">
+        <div class="cli-feature-icon">🎯</div>
+        <div>
+          <h4>Confidence threshold</h4>
+          <p>Set a minimum score (0–1) — files below it land in Miscellaneous instead of being force-categorized.</p>
+        </div>
+      </div>
+      <div class="cli-feature">
+        <div class="cli-feature-icon">⚡</div>
+        <div>
+          <h4>Async batch processing</h4>
+          <p>Files are processed concurrently in configurable batches — 10x faster than sequential on large drives.</p>
+        </div>
+      </div>
+      <div class="cli-feature">
+        <div class="cli-feature-icon">📊</div>
+        <div>
+          <h4>HTML + JSON reports</h4>
+          <p>Every run generates a full audit trail: what moved, what was skipped, confidence scores, and reasons.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRIVACY -->
+<div class="privacy-section">
+  <div class="privacy-inner">
+    <div>
+      <span class="section-tag" style="color:rgba(255,255,255,0.6)">Privacy first</span>
+      <h2>Your files never<br>leave your machine.</h2>
+      <p class="section-sub">In a world of SaaS tools that vacuum up your data, Drive Organizer AI is different by design.</p>
+    </div>
+    <div class="privacy-points">
+      <div class="privacy-point">
+        <div class="privacy-point-icon">🔐</div>
+        <div>
+          <h4>Zero external transfer</h4>
+          <p>All NLP and classification runs entirely on your local CPU. No file contents are ever sent to a third-party server.</p>
+        </div>
+      </div>
+      <div class="privacy-point">
+        <div class="privacy-point-icon">🗝️</div>
+        <div>
+          <h4>Local token storage</h4>
+          <p>Your OAuth2 token is stored in <code style="background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:4px;font-size:0.85em">token.pickle</code> on your device only — never uploaded anywhere.</p>
+        </div>
+      </div>
+      <div class="privacy-point">
+        <div class="privacy-point-icon">📜</div>
+        <div>
+          <h4>Fully open source</h4>
+          <p>Every line of code is on GitHub. Audit exactly what runs — no compiled binaries, no hidden network calls.</p>
+        </div>
+      </div>
+      <div class="privacy-point">
+        <div class="privacy-point-icon">🛡️</div>
+        <div>
+          <h4>Minimal permissions</h4>
+          <p>Requests only the Drive scope needed to read and move files. No Gmail, no Calendar, no Contacts access.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP -->
+<section id="setup">
+  <span class="section-tag">Quick start</span>
+  <h2>Up and running<br>in four steps</h2>
+  <p class="section-sub">From a fresh clone to organized Drive in under five minutes.</p>
+
+  <div class="setup-grid">
+    <div class="setup-step fade-up">
+      <div class="setup-step-num">1</div>
+      <h4>Create GCP Project</h4>
+      <p>Go to Google Cloud Console, create a project, enable Drive API, and download an OAuth2 Client ID JSON as <span class="code-inline">credentials.json</span>.</p>
+    </div>
+    <div class="setup-step fade-up" style="transition-delay:0.1s">
+      <div class="setup-step-num">2</div>
+      <h4>Clone & Install</h4>
+      <p>
+        <span class="code-inline">git clone</span> the repo, create a venv, then run <span class="code-inline">pip install -r requirements.txt</span>. Tesseract must be installed for OCR.
+      </p>
+    </div>
+    <div class="setup-step fade-up" style="transition-delay:0.2s">
+      <div class="setup-step-num">3</div>
+      <h4>Configure</h4>
+      <p>Copy <span class="code-inline">config.example.yaml</span> to <span class="code-inline">config.yaml</span>. Adjust categories, confidence threshold, and batch size.</p>
+    </div>
+    <div class="setup-step fade-up" style="transition-delay:0.3s">
+      <div class="setup-step-num">4</div>
+      <h4>Run it</h4>
+      <p>Start with <span class="code-inline">--dry-run</span> to preview. Then run without it to organize. Your browser opens once for Google login.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CI/CD PIPELINE -->
+<section id="pipeline" style="background: var(--paper); border-radius: var(--r-lg); max-width: 1280px; margin: 0 auto 96px; padding: 64px 48px;">
+  <span class="section-tag">GitHub Actions</span>
+  <h2>5-stage CI/CD<br>pipeline included</h2>
+  <p class="section-sub">Push to <span class="code-inline">main</span> and your code is automatically linted, tested across Python 3.9–3.11, security-scanned, containerized, and deployed.</p>
+
+  <div class="pipeline-viz fade-up">
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-icon lint">🧹</div>
+      <div class="pipeline-stage-name">Lint</div>
+      <div class="pipeline-stage-sub">Ruff + Black</div>
+    </div>
+    <div class="pipeline-arrow"></div>
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-icon test">🧪</div>
+      <div class="pipeline-stage-name">Test</div>
+      <div class="pipeline-stage-sub">pytest + coverage<br>3.9 / 3.10 / 3.11</div>
+    </div>
+    <div class="pipeline-arrow"></div>
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-icon sec">🛡️</div>
+      <div class="pipeline-stage-name">Security</div>
+      <div class="pipeline-stage-sub">Bandit scan</div>
+    </div>
+    <div class="pipeline-arrow"></div>
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-icon docker">🐳</div>
+      <div class="pipeline-stage-name">Docker</div>
+      <div class="pipeline-stage-sub">Build & push<br>to GHCR</div>
+    </div>
+    <div class="pipeline-arrow"></div>
+    <div class="pipeline-stage">
+      <div class="pipeline-stage-icon deploy">🚀</div>
+      <div class="pipeline-stage-name">Deploy</div>
+      <div class="pipeline-stage-sub">GitHub Pages</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <span class="section-tag" style="display:block; text-align:center;">Open source & free</span>
+  <h2>Ready to declutter<br>your Drive?</h2>
+  <p class="section-sub">Star the repo, open an issue, or just clone it and go.</p>
+  <div class="cta-actions">
+    <a href="https://github.com/your-username/drive-organizer-ai" class="btn-primary">
+      ⭐ Star on GitHub
+    </a>
+    <a href="https://github.com/your-username/drive-organizer-ai/issues" class="btn-secondary">
+      Report an issue →
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Drive Organizer AI</div>
+  <div class="footer-links">
+    <a href="https://github.com/your-username/drive-organizer-ai">GitHub</a>
+    <a href="https://github.com/your-username/drive-organizer-ai/issues">Issues</a>
+    <a href="https://github.com/your-username/drive-organizer-ai/blob/main/README.md">Docs</a>
+  </div>
+  <div class="footer-copy">MIT License · Made with care</div>
+</footer>
+
+<script>
+  // ── Demo file animation ───────────────────────────────────────────
+  const files = document.querySelectorAll('.demo-file');
+  files.forEach(f => {
+    const icon = f.dataset.icon;
+    const bg   = f.dataset.bg;
+    const name = f.dataset.name;
+    const badgeClass = f.dataset.badge;
+    const label = f.dataset.label;
+    const conf  = f.dataset.conf;
+    f.innerHTML = `
+      <div class="demo-file-icon" style="background:${bg}">${icon}</div>
+      <div class="demo-file-name">${name}</div>
+      <div class="demo-file-badge ${badgeClass}">${label}</div>
+      <div class="demo-conf">${conf}</div>
+    `;
+    setTimeout(() => f.classList.add('visible'), parseInt(f.dataset.delay));
+  });
+
+  // Progress bar
+  const bar = document.getElementById('bar');
+  const pct = document.getElementById('pct');
+  let p = 0;
+  const interval = setInterval(() => {
+    p = Math.min(p + 1.4, 100);
+    bar.style.width = p + '%';
+    pct.textContent = Math.round(p) + '%';
+    if (p >= 100) clearInterval(interval);
+  }, 45);
+
+  // ── Counter animation ─────────────────────────────────────────────
+  const counters = document.querySelectorAll('.stat-num[data-count]');
+  const countObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.dataset.count);
+      let current = 0;
+      const step = Math.ceil(target / 40);
+      const timer = setInterval(() => {
+        current = Math.min(current + step, target);
+        el.textContent = current + (target > 10 ? '+' : '');
+        if (current >= target) clearInterval(timer);
+      }, 35);
+      countObserver.unobserve(el);
+    });
+  }, { threshold: 0.5 });
+  counters.forEach(c => countObserver.observe(c));
+
+  // ── Scroll fade-up ────────────────────────────────────────────────
+  const fadeEls = document.querySelectorAll('.fade-up');
+  const fadeObserver = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        fadeObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  fadeEls.forEach(el => fadeObserver.observe(el));
+</script>
+</body>
+</html>

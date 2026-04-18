@@ -1,0 +1,34 @@
+# Drive Organizer AI — Configuration
+# Copy this file to config.yaml and adjust as needed.
+
+# Google OAuth credentials and token paths
+credentials_path: credentials/credentials.json
+token_path: credentials/token.pickle
+
+# Classification settings
+confidence_threshold: 0.60      # Files below this score won't be moved
+max_content_chars: 3000         # Characters of file content to send to classifier
+keywords_path: assets/category_keywords.json
+
+# Only organize files into these categories (remove any you don't need)
+allowed_categories:
+  - HR
+  - Finance
+  - Academics
+  - Projects
+  - Marketing
+  - Personal
+  - Legal
+  - Technical
+  - Miscellaneous
+
+# Drive settings
+root_folder_name: "Organized"   # Parent folder that will be created in your Drive
+batch_size: 20                  # Files processed in parallel per batch
+
+# OCR settings
+ocr_enabled: true
+# tesseract_path: /usr/local/bin/tesseract  # Uncomment if Tesseract isn't on PATH
+
+# Reporting
+report_output_dir: reports

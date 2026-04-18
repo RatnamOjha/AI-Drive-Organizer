@@ -1,0 +1,41 @@
+# Credentials — NEVER commit these
+credentials/credentials.json
+credentials/token.pickle
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Reports (generated output)
+reports/
+
+# Config (may contain secrets)
+config.yaml
+
+# Logs
+*.log
+organizer.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
